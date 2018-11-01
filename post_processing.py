@@ -2,16 +2,18 @@ import json
 import itertools
 import copy
 import os
+from os.path import expanduser
 from astropy.io import fits
 from pprint import pprint
 from operator import itemgetter
 
-LTA_FILE = "/home/mahak/NCRA/LTA/25_076_25oct2013.lta"
-X_INFO_FILE = "/home/mahak/gadpu-xinfo/./xinfo"
+HOME = expanduser("~")
+LTA_FILE = HOME + "/NCRA/LTA/25_076_25oct2013.lta"
+X_INFO_FILE = HOME + "/gadpu-xinfo/./xinfo"
 OBS_NO = 6744
-OBS_LOG_FILE = "/home/mahak/NCRA/LTA/6744.obslog"
-OUTPUT_JSON_FILE = "/home/mahak/gadpu-xinfo/output_json"
-PBCOR_FITS_FILE = "/home/mahak/NCRA/1120+143.SP2B.PBCOR.FITS"
+OBS_LOG_FILE = HOME + "/NCRA/LTA/6744.obslog"
+OUTPUT_JSON_FILE = HOME + "/gadpu-xinfo/output_json"
+PBCOR_FITS_FILE = HOME + "/NCRA/1120+143.SP2B.PBCOR.FITS"
 NEW_FITS_FILE = "updated_header_file.fits"
 
 
@@ -80,25 +82,21 @@ def construct_final_header():
 
     #appending LTA filename
     final_dict.update({"LTAFILE":LTA_FILE})
-    append_header("/home/mahak/1120+143.SP2B.PBCOR.FITS",final_dict)
+    append_header(PBCOR_FITS_FILE,final_dict)
     #pprint(final_dict)
 
 
 def append_header(fits_img_file, dict):
-    # appends the lta info dictionary to the fits header
     hdulist = fits.open(fits_img_file)
     pprint(hdulist.info())
     pprint(hdulist[0].header)
     for key,value in dict.items():
         hdulist[0].header[key] = value
 
-    hdulist.writeto(fits_img_file,clobber = True)
-
-    #creating a new fits file with the appended header
-    # hdulist.writeto(NEW_FITS_FILE)
-    # hdulist_new = fits.open(NEW_FITS_FILE)
-    # pprint(hdulist_new.info())
-    # pprint(hdulist_new[0].header)
+    hdulist.writeto(NEW_FITS_FILE)
+    hdulist_new = fits.open(NEW_FITS_FILE)
+    pprint(hdulist_new.info())
+    pprint(hdulist_new[0].header)
 
 
 
