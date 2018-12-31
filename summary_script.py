@@ -84,4 +84,4 @@ def main():
     print("Inserted", count, "documents into summary_db")
 
 if __name__ == "__main__":
-main()
+    main()
