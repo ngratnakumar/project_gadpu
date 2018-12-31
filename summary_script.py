@@ -1,6 +1,7 @@
 import pymongo
 import os
 import sys
+from matplotlib import pyplot as plt
 
 dbname = "summary_db"
 
@@ -15,6 +16,10 @@ def summary(path_to_GARUDATA):
     cycle number, date.
     """
     count = 0
+    visibility_list = []
+    rms_list= []
+    clean_list = []
+    flux_list = []
     for root, dirs, files in os.walk(path_to_GARUDATA):
         for fname in files:
             file_path = os.path.join(root, fname)
@@ -43,6 +48,10 @@ def summary(path_to_GARUDATA):
                     clean_components = int(line[line.index("CLEAN") - 1])
                     rms = float(line[line.index("mJy/beam") - 1])
                     dict[keyname] = {"visibilities" : visibility , "flux" : flux , "clean_components" : clean_components , "rms" : rms}
+                    visibility_list.append(visibility)
+                    flux_list.append(flux)
+                    clean_list.append(clean_components)
+                    rms_list.append(rms)
 
             if lines:
                 fname = fname.split("_")
@@ -65,9 +74,12 @@ def summary(path_to_GARUDATA):
                 document['file_last_val'] = file_last_val
 
                 # Insert into database
-                collection = mydb[cycleno]
-                collection.insert_one(document)
-                count += 1
+                last_entry = dict.get("SP2B")
+                if last_entry is not None:
+                    collection = mydb[cycleno]
+                    collection.insert_one(document)
+                    count += 1
+
     return count
 
 def main():
