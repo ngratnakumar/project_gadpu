@@ -23,7 +23,6 @@ def read_database(frequency):
     collection = mydb['CYCLE15']
     # cursor = collection.find({})
 
-
     cursor = collection.find({'frequency' : frequency})
    
 
@@ -91,20 +90,20 @@ def read_database(frequency):
         SP2B_rms = document['summary']['SP2B']['rms']
              
         df = df.append({'Source':sources , 'MC1_visibilities' : MC1_visibilities , 'MC1_flux' : MC1_flux, \
-            'MC1_clean' : MC1_clean, 'MC1_rms' : MC1_rms, 'SC2_visibilities' : SC2_visibilities, \
-            'SC2_flux' : SC2_flux, 'SC2_clean' : SC2_clean, 'SC2_rms' : SC2_rms , 'SC2_visibilities' : SC2_visibilities, \
+            'MC1_clean' : MC1_clean, 'MC1_rms' : MC1_rms, 'SC1_visibilities' : SC1_visibilities, \
+            'SC1_flux' : SC1_flux, 'SC1_clean' : SC1_clean, 'SC1_rms' : SC1_rms , 'SC2_visibilities' : SC2_visibilities, \
             'SC2_flux' : SC2_flux, 'SC2_clean' : SC2_clean, 'SC2_rms' : SC2_rms , 'SC3_visibilities' : SC3_visibilities,\
             'SC3_flux' : SC3_flux, 'SC3_clean' : SC3_clean, 'SC3_rms' : SC3_rms  , 'SP1_visibilities' : SP1_visibilities,\
             'SP1_flux' : SP1_flux, 'SP1_clean' : SP1_clean, 'SP1_rms' : SP1_rms , 'SP1A_visibilities' : SP1A_visibilities,\
             'SP1A_flux' : SP1A_flux, 'SP1A_clean' : SP1A_clean, 'SP1A_rms' : SP1A_rms , 'SP1B_visibilities' : SP1B_visibilities,\
-            'SP1B_flux' : SP1B_flux, 'SP1B_clean' : SP1B_clean, 'SP1B_rms' : SP1A_rms , 'SP2_visibilities' : SP2_visibilities,\
-            'SP1_flux' : SP2_flux, 'SP1_clean' : SP2_clean, 'SP1_rms' : SP2_rms , 'SP2A_visibilities' : SP2A_visibilities,\
-            'SP1A_flux' : SP2A_flux, 'SP1A_clean' : SP2A_clean, 'SP1A_rms' : SP2A_rms , 'SP2B_visibilities' : SP2B_visibilities,\
-            'SP1B_flux' : SP2B_flux, 'SP1B_clean' : SP2B_clean, 'SP1B_rms' : SP2A_rms} , ignore_index = True)
+            'SP1B_flux' : SP1B_flux, 'SP1B_clean' : SP1B_clean, 'SP1B_rms' : SP1B_rms , 'SP2_visibilities' : SP2_visibilities,\
+            'SP2_flux' : SP2_flux, 'SP2_clean' : SP2_clean, 'SP2_rms' : SP2_rms , 'SP2A_visibilities' : SP2A_visibilities,\
+            'SP2A_flux' : SP2A_flux, 'SP2A_clean' : SP2A_clean, 'SP2A_rms' : SP2A_rms , 'SP2B_visibilities' : SP2B_visibilities,\
+            'SP2B_flux' : SP2B_flux, 'SP2B_clean' : SP2B_clean, 'SP2B_rms' : SP2B_rms} , ignore_index = True)
     
 
-    print(df) 
-    
+    return df 
+
 
 
 
@@ -140,6 +139,9 @@ def scatter_plotting(*args):
     plt.scatter(xval, yval)
     plt.show()
 
+
+
+
 def main():
     """if len(sys.argv) < 5:
         print("Usage: python3 summary_analysis.py <Frequency> <Stage> <Value2> <Value2>")
@@ -150,6 +152,8 @@ def main():
         scatter_plotting(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     else:
         read_database('610')
+
+
 
 if __name__ == "__main__":
     main()
