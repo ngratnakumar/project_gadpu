@@ -101,8 +101,10 @@ def read_database(frequency):
             'SP1_flux' : SP2_flux, 'SP1_clean' : SP2_clean, 'SP1_rms' : SP2_rms , 'SP2A_visibilities' : SP2A_visibilities,\
             'SP1A_flux' : SP2A_flux, 'SP1A_clean' : SP2A_clean, 'SP1A_rms' : SP2A_rms , 'SP2B_visibilities' : SP2B_visibilities,\
             'SP1B_flux' : SP2B_flux, 'SP1B_clean' : SP2B_clean, 'SP1B_rms' : SP2A_rms} , ignore_index = True)
+    
 
-    print(df)    
+    print(df) 
+    print(df[df['MC1_rms'] > 20])   
 
 
 
