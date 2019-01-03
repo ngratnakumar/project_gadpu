@@ -104,7 +104,7 @@ def read_database(frequency):
     
 
     print(df) 
-    print(df[df['MC1_rms'] > 20])   
+    
 
 
 
