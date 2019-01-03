@@ -118,24 +118,24 @@ def scatter_plotting(*args):
     cursor = collection.find({'frequency' : frequency})
     for doc in cursor:
         if len(args)==4:
-            stage = args[2]
-            data_val2 = args[2]
+            stage = args[1]
+            data_val1 = args[2]
             data_val2 = args[3]
-            xval.append(doc['summary'][stage][data_val2])
+            xval.append(doc['summary'][stage][data_val1])
             yval.append(doc['summary'][stage][data_val2])
         else:
+            data_val1 = args[1]
             data_val2 = args[2]
-            data_val2 = args[2]
-            xval.append(doc['summary']['SP2B'][data_val2] / doc['summary']['MC2'][data_val2])
-            yval.append(doc['summary']['SP2B'][data_val2] / doc['summary']['MC2'][data_val2])
+            xval.append(doc['summary']['SP2B'][data_val1] / doc['summary']['MC1'][data_val1])
+            yval.append(doc['summary']['SP2B'][data_val2] / doc['summary']['MC1'][data_val2])
 
     fig = plt.figure()
     if len(args)==4:
-        Title = data_val2 + ' Vs. ' + data_val2 + ' (stage ' + stage + ')' 
+        Title = data_val1 + ' Vs. ' + data_val2 + ' (stage ' + stage + ')' 
     else:
-        Title = data_val2 + ' Vs. ' + data_val2
+        Title = data_val1 + ' Vs. ' + data_val2
     fig.suptitle(Title)
-    plt.xlabel(data_val2)
+    plt.xlabel(data_val1)
     plt.ylabel(data_val2)
     plt.scatter(xval, yval)
     plt.show()
@@ -144,12 +144,12 @@ def main():
     """if len(sys.argv) < 5:
         print("Usage: python3 summary_analysis.py <Frequency> <Stage> <Value2> <Value2>")
         exit(2)"""
-    # if len(sys.argv) == 4:
-    #     scatter_plotting(sys.argv[2], sys.argv[2], sys.argv[3])
-    # elif len(sys.argv) == 5:
-    #     scatter_plotting(sys.argv[2], sys.argv[2], sys.argv[3], sys.argv[4])
-
-    read_database('610')
+    if len(sys.argv) == 4:
+        scatter_plotting(sys.argv[1], sys.argv[2], sys.argv[3])
+    elif len(sys.argv) == 5:
+        scatter_plotting(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
+    else:
+        read_database('610')
 
 if __name__ == "__main__":
     main()
