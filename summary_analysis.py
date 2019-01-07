@@ -6,6 +6,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from mpl_toolkits.mplot3d import axes3d, Axes3D
 from scipy import stats
 from matplotlib.cbook import boxplot_stats
 from itertools import combinations
@@ -40,6 +41,8 @@ ATTRIBUTES = ['visibilities',
 FREQUENCIES = [325, 610]
 
 CLIP_LIMITS = [325, 'MC1', 'visibilities', 50000, 325, 'MC1', 'flux', 6]
+
+
 
 def create_dataframe_from_db():
     print("Creating dataframe...")
@@ -178,6 +181,139 @@ def plot_kde(df):
             manager = plt.get_current_fig_manager()
             manager.resize(*manager.window.maxsize())
             plt.show()
+
+def plot_heat_map(df):
+    
+    sns.set(style="white")
+    df1 = df.loc[df["Frequency"] == "325"]
+    df2 = df.loc[df["Frequency"] == "610"]
+    for stage in STAGES:        
+        stage_visibilities = stage + '_visibilities'
+        stage_flux = stage + '_flux'
+        stage_clean = stage + '_clean'
+        stage_rms = stage + '_rms'
+        df1_temp = df1[[stage_visibilities,stage_flux,stage_clean,stage_rms]]
+        df2_temp = df2[[stage_visibilities,stage_flux,stage_clean,stage_rms]]
+
+        #compute correlation matrix
+        corr1 = df1_temp.corr()
+        corr2 = df2_temp.corr()
+
+        # Generate a mask for the upper triangle
+        mask = np.zeros_like(corr1, dtype=np.bool)
+        mask[np.triu_indices_from(mask)] = True
+
+        #Setting plot title
+        plt.suptitle("Correlation Heatmap for stage: " + stage)
+
+        
+        # Set up the matplotlib figure
+        plt.subplot(1,2,1)
+        plt.title("Frequency: 325")
+        # Generate a custom diverging colormap
+        cmap = sns.diverging_palette(220, 10, as_cmap=True)
+        
+        # Draw the heatmap with the mask and correct aspect ratio
+        sns.heatmap(corr1, mask=mask, cmap=cmap, vmax=.3, center=0,\
+            square=True, linewidths=.5, cbar_kws={"shrink": .5}, annot=True, fmt=".2f")
+
+        
+        # Set up the matplotlib figure
+        plt.subplot(1,2,2)
+        plt.title("Frequency: 610")        
+
+        # Generate a custom diverging colormap
+        cmap = sns.diverging_palette(220, 10, as_cmap=True)
+        
+        # Draw the heatmap with the mask and correct aspect ratio
+        sns.heatmap(corr2, mask=mask, cmap=cmap, vmax=.3, center=0,\
+            square=True, linewidths=.5, cbar_kws={"shrink": .5}, annot=True, fmt=".2f")
+
+        manager = plt.get_current_fig_manager()
+        manager.resize(*manager.window.maxsize())
+        plt.show()
+
+def plot_3d_scatter(df):
+
+    print("func called")
+    for frequency in FREQUENCIES:
+        df_temp = df.loc[df['Frequency'] == str(frequency)]
+        for stage in STAGES:
+    
+            fig = plt.figure()
+            ax = Axes3D(fig)
+            title = "4D plot for Frequency: " + str(frequency) + " Stage: " + stage
+            fig.suptitle(title)
+            
+            stage_visibilities = stage + '_visibilities'
+            stage_flux = stage + '_flux'
+            stage_clean = stage + '_clean'
+            stage_rms = stage + '_rms'
+
+            x = df_temp[stage_visibilities]
+            y = df_temp[stage_rms]
+            z = df_temp[stage_clean]
+            c = df_temp[stage_flux] 
+
+            xlabel = stage + "visibilities"
+            ylabel = stage + "rms"
+            zlabel = stage + "clean"
+
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
+            ax.set_zlabel(zlabel) 
+
+            sc = ax.scatter(x, y, z, c=c, cmap=plt.hot())
+            plt.colorbar(sc)
+            plt.show()
+
+
+def plot_strip(df):
+
+    df = df[df["SP1_flag"] == 1]
+    df = df.drop("Cycle", 1)
+    df = df.drop("SP1_flag", 1)
+    
+    for attribute in ATTRIBUTES:
+        new_df = pd.DataFrame()
+        for stage in STAGES:
+            query_string = stage + "_" + attribute
+            new_df[query_string] = df[query_string]
+        new_df["freq"] = df["Frequency"]        
+        splot(new_df)    
+
+
+def splot(df):
+
+    sns.set(style="whitegrid")
+
+    # "Melt" the dataset to "long-form" or "tidy" representation
+    df = pd.melt(df, "freq", var_name="measurement")
+
+    # Initialize the figure
+    f, ax = plt.subplots()
+    sns.despine(bottom=True, left=True)
+
+    # Show each observation with a scatterplot
+    sns.stripplot(x="value", y="measurement", hue="freq",\
+        data=df, dodge=True, jitter=True,\
+        alpha=.25, zorder=1)
+
+    # Show the conditional means
+    sns.pointplot(x="value", y="measurement", hue="freq",\
+        data=df, dodge=.532, join=False, palette="dark",\
+        markers="d", scale=.75, ci=None)
+
+    # Improve the legend 
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[3:], labels[3:], title="freq",\
+        handletextpad=0, columnspacing=1,\
+        loc="lower right", ncol=3, frameon=True)
+
+    plt.show()
+
+
+
 
 
 def scatter_plotting(*args):
