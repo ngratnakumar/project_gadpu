@@ -1,7 +1,7 @@
-import pymongo
 import os
 import sys
 from os.path import expanduser
+import pymongo
 
 dbname = "summary_db"
 
@@ -9,12 +9,12 @@ dbname = "summary_db"
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 mydb = myclient[dbname]
 
-def vis_update(path_to_garudata, cycle):
+def visibility_update(path_to_garudata, cycle):
 
     if cycle == 15:
-        fname = path_to_garudata + "GARUDATA/" + "IMAGING" + cycle + "/CYCLE" + cycle + "/"
+        filename = path_to_garudata + "GARUDATA/" + "IMAGING" + cycle + "/CYCLE" + cycle + "/"
     else:
-        fname = path_to_garudata[:-1]
+        filename = path_to_garudata[:-1]
 
     home = expanduser("~") + "/project_gadpu"
 
@@ -22,10 +22,10 @@ def vis_update(path_to_garudata, cycle):
     with open(timefile_name) as timefile:
         lines = timefile.readlines()
 
-    secondlist = []
+    secondslist = []
     pathlist = []
     processed_pathlist = []
-    processed_secondlist = []
+    processed_secondslist = []
     visibilities = {}
 
     for line in lines:
@@ -34,21 +34,21 @@ def vis_update(path_to_garudata, cycle):
         timeval = timeval[-1]
         totalseconds = float(timeval.split(" ")[1])
 
-        secondlist.append(totalseconds)
-        totalpath = fname + path[0] + ".summary"
+        secondslist.append(totalseconds)
+        totalpath = filename + path[0] + ".summary"
         pathlist.append(totalpath)
 
-    for path, seconds in zip(pathlist, secondlist):
+    for path, seconds in zip(pathlist, secondslist):
         with open(path) as fpath:
             lines = fpath.readlines()
         for value in lines:
             if 'SP2B' in value:
                 value = value.split(" ")
                 processed_pathlist.append(path)
-                processed_secondlist.append(seconds)
+                processed_secondslist.append(seconds)
 
-    for path, seconds in zip(processed_pathlist, processed_secondlist):
-        final_vis_vals = []
+    for path, seconds in zip(processed_pathlist, processed_secondslist):
+        final_visibility_vals = []
         with open(path) as filepath:
             readfile = filepath.readlines()
         for eachline in readfile:
@@ -57,28 +57,27 @@ def vis_update(path_to_garudata, cycle):
                 eachline = eachline[eachline.index("visibilities,") - 1]
                 eachline = int(eachline)
                 eachline = eachline * seconds
-                final_vis_vals.append(eachline)
-        visibilities[path] = final_vis_vals
+                final_visibility_vals.append(eachline)
+        visibilities[path] = final_visibility_vals
 
-    return visibilities, processed_pathlist, fname
+    return visibilities, processed_pathlist
 
 
 def summary(path_to_GARUDATA, cycle):
-    """Function to parse the required data from summary 
-    files- required time, frequency, visibilities, flux, 
-    clean_components, RMS, source, observation number, 
+    """Function to parse the required data from summary
+    files- required time, frequency, visibilities, flux,
+    clean_components, RMS, source, observation number,
     cycle number, date.
     """
     count = 0
-   
-    vis_directory, plist, filename = vis_update(path_to_GARUDATA, cycle)
 
-    i = 0
-    for file_path in plist:
-        curr_vis = vis_directory[file_path]
-        with open(file_path) as f:
-            lines = f.readlines()
-        i = 0
+    vis_directory, file_path_list = visibility_update(path_to_GARUDATA, cycle)
+
+    for file_path in file_path_list:
+        current_visibility = vis_directory[file_path]
+        with open(file_path) as file:
+            lines = file.readlines()
+        visibility_count = 0
         dict = {}
         for line in lines:
             if 'processing took' in line:
@@ -98,23 +97,23 @@ def summary(path_to_GARUDATA, cycle):
                 index = line.index("image:") - 1
                 keyname = line[index]
                 visibility = int(line[line.index("visibilities,") - 1])
-                visibility = curr_vis[i]
-                i = i + 1
+                visibility = current_visibility[visibility_count]
+                visibility_count += 1
                 flux = float(line[line.index("Jy") - 1])
                 clean_components = int(line[line.index("CLEAN") - 1])
                 rms = float(line[line.index("mJy/beam") - 1])
-                dict[keyname] = {"visibilities" : visibility , "flux" : flux , "clean_components" : clean_components , "rms" : rms}
+                dict[keyname] = {"visibilities" : visibility, "flux" : flux, "clean_components" : clean_components, "rms" : rms}
 
         if lines:
-            fname = file_path.split("/")
-            dirlist = fname
-            fname = fname[-1]
-            fname = fname.split(".")
-            fname = fname[0]
-            fname = fname.split("_")
-            source = fname[1]
-            freq = fname[2][4:]
-            file_last_val = fname[-2]+"_"+fname[-1]
+            filename = file_path.split("/")
+            dirlist = filename
+            filename = filename[-1]
+            filename = filename.split(".")
+            filename = filename[0]
+            filename = filename.split("_")
+            source = filename[1]
+            freq = filename[2][4:]
+            file_last_val = filename[-2]+"_"+filename[-1]
 
             obsno = dirlist[-4]
             cycleno = dirlist[-5]
@@ -139,7 +138,7 @@ def summary(path_to_GARUDATA, cycle):
     return count
 
 def main():
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 3:
         print("Usage: python3 summary_script.py <path_to_GARUDATA> <cycle>")
         exit(1)
     path_to_GARUDATA = sys.argv[1]
