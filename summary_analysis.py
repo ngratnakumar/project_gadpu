@@ -200,9 +200,9 @@ def plot_histogram(df):
                 plt.ylabel('Frequency')
                 plt.title('Histogram: Stage='+stage+' Field:'+i)
                 n, bins, patches=plt.hist(x=df_temp[str3], bins=20, color='#0504aa',alpha=0.7, rwidth=0.85)
-                
+
                 #maxfreq=n.max()
-                
+
             manager=plt.get_current_fig_manager()
             #manager.resize(*manager.window.maxsize())
             #plt.savefig('Hist/Histo_'+str(frequency)+'_'+stage+'_'+i)
@@ -214,7 +214,7 @@ def plot_heat_map(df):
     df1 = df.loc[df["Frequency"] == "325"]
     df2 = df.loc[df["Frequency"] == "610"]
 
-    for stage in STAGES:        
+    for stage in STAGES:
         stage_visibilities = stage + '_visibilities'
         stage_flux = stage + '_flux'
         stage_clean = stage + '_clean'
@@ -233,25 +233,24 @@ def plot_heat_map(df):
         #Setting plot title
         plt.suptitle("Correlation Heatmap for stage: " + stage)
 
-        
+
         # Set up the matplotlib figure
         plt.subplot(1,2,1)
         plt.title("Frequency: 325")
         # Generate a custom diverging colormap
         cmap = sns.diverging_palette(220, 10, as_cmap=True)
-        
+
         # Draw the heatmap with the mask and correct aspect ratio
         sns.heatmap(corr1, mask=mask, cmap=cmap, vmax=.3, center=0,\
             square=True, linewidths=.5, cbar_kws={"shrink": .5}, annot=True, fmt=".2f")
 
-        
         # Set up the matplotlib figure
         plt.subplot(1,2,2)
-        plt.title("Frequency: 610")        
+        plt.title("Frequency: 610")
 
         # Generate a custom diverging colormap
         cmap = sns.diverging_palette(220, 10, as_cmap=True)
-        
+
         # Draw the heatmap with the mask and correct aspect ratio
         sns.heatmap(corr2, mask=mask, cmap=cmap, vmax=.3, center=0,\
             square=True, linewidths=.5, cbar_kws={"shrink": .5}, annot=True, fmt=".2f")
@@ -266,12 +265,12 @@ def plot_3d_scatter(df):
     for frequency in FREQUENCIES:
         df_temp = df.loc[df['Frequency'] == str(frequency)]
         for stage in STAGES:
-    
+
             fig = plt.figure()
             ax = Axes3D(fig)
             title = "4D plot for Frequency: " + str(frequency) + " Stage: " + stage
             fig.suptitle(title)
-            
+
             stage_visibilities = stage + '_visibilities'
             stage_flux = stage + '_flux'
             stage_clean = stage + '_clean'
@@ -280,7 +279,7 @@ def plot_3d_scatter(df):
             x = df_temp[stage_visibilities]
             y = df_temp[stage_rms]
             z = df_temp[stage_clean]
-            c = df_temp[stage_flux] 
+            c = df_temp[stage_flux]
 
             xlabel = stage + "visibilities"
             ylabel = stage + "rms"
@@ -288,7 +287,7 @@ def plot_3d_scatter(df):
 
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
-            ax.set_zlabel(zlabel) 
+            ax.set_zlabel(zlabel)
 
             sc = ax.scatter(x, y, z, c=c, cmap=plt.hot())
             plt.colorbar(sc)
@@ -300,14 +299,14 @@ def plot_strip(df):
     df = df[df["SP1_flag"] == 1]
     df = df.drop("Cycle", 1)
     df = df.drop("SP1_flag", 1)
-    
+
     for attribute in ATTRIBUTES:
-        new_df = pd.DataFrame()
+        new_df = pd.DataF-rame()
         for stage in STAGES:
             query_string = stage + "_" + attribute
             new_df[query_string] = df[query_string]
-        new_df["freq"] = df["Frequency"]        
-        splot(new_df)    
+        new_df["freq"] = df["Frequency"]
+        splot(new_df)
 
 
 def splot(df):
@@ -331,9 +330,9 @@ def splot(df):
         data=df, dodge=.532, join=False, palette="dark",\
         markers="d", scale=.75, ci=None)
 
-    # Improve the legend 
+    # Improve the legend
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[3:], labels[3:], title="freq",\
+    ax.legend(handles[4:], labels[4:], title="freq",\
         handletextpad=0, columnspacing=1,\
         loc="lower right", ncol=3, frameon=True)
 
@@ -341,38 +340,24 @@ def splot(df):
 
 
 
-
-
-def scatter_plotting(*args):
-    xval = []
-    yval = []
-    #print(mydb.list_collection_names())
-    collection = mydb['CYCLE15']
-    #collection.delete_many({})
-    frequency = args[0]
-    cursor = collection.find({'frequency' : frequency})
-    for doc in cursor:
-        if len(args)==4:
-            stage = args[1]
-            data_val1 = args[2]
-            data_val2 = args[3]
-            xval.append(doc['summary'][stage][data_val1])
-            yval.append(doc['summary'][stage][data_val2])
-        else:
-            data_val1 = args[1]
-            data_val2 = args[2]
-            xval.append(doc['summary']['SP2B'][data_val1] / doc['summary']['MC1'][data_val1])
-            yval.append(doc['summary']['SP2B'][data_val2] / doc['summary']['MC1'][data_val2])
-    fig = plt.figure()
-    if len(args)==4:
-        Title = data_val1 + ' Vs. ' + data_val2 + ' (stage ' + stage + ')'
-    else:
-        Title = data_val1 + ' Vs. ' + data_val2
-    fig.suptitle(Title)
-    plt.xlabel(data_val1)
-    plt.ylabel(data_val2)
-    plt.scatter(xval, yval)
-    plt.show(xlabel)
+def plot_scatter(df):
+    df = df[df["SP1_flag"] == 1]
+    for frequency in FREQUENCIES:
+        df_temp = df.loc[df['Frequency'] == frequency]
+        for stage in STAGES:
+            combs = list( combinations(ATTRIBUTES, 2) )
+            plt.suptitle("Scatter plot for frequency: " + str(frequency) + " stage: " + stage)
+            for i, comb in list(enumerate(combs, 1)):
+                xlabel, ylabel = comb
+                data_x = df_temp[stage + '_' + xlabel]
+                data_y = df_temp[stage + '_' + ylabel]
+                plt.subplots_adjust( hspace=0.5, wspace=0.5 )
+                plt.subplot(2, 3, i)
+                plt.title(ylabel + ' v/s ' + xlabel)
+                plt.scatter(data_x, data_y, s=1 )
+            manager = plt.get_current_fig_manager()
+            manager.resize(*manager.window.maxsize())
+            plt.show()
 
 
 def main():
