@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from os.path import expanduser
 import pymongo
@@ -13,6 +14,9 @@ def visibility_update(path_to_garudata, cycle):
 
     if cycle == '15':
         filename = path_to_garudata + "GARUDATA/" + "IMAGING" + cycle + "/CYCLE" + cycle + "/"
+    elif cycle == '21':
+        print("Cycle 21 is has incomplete time resolution values. Exiting now.")
+        exit(1)
     else:
         filename = path_to_garudata[:-1]
 
@@ -29,23 +33,31 @@ def visibility_update(path_to_garudata, cycle):
     visibilities = {}
 
     for line in lines:
+        line = line.strip()
         path = line.split('.')
         timeval = line.split("=")
         timeval = timeval[-1]
-        totalseconds = float(timeval.split(" ")[1])
+        if cycle == '20' or cycle == '22' or cycle == '23':
+            totalseconds = float(timeval)
+        else:
+            totalseconds = float(timeval.split(" ")[1])
 
         secondslist.append(totalseconds)
         totalpath = filename + path[0] + ".summary"
         pathlist.append(totalpath)
 
     for path, seconds in zip(pathlist, secondslist):
-        with open(path) as fpath:
-            lines = fpath.readlines()
-        for value in lines:
-            if 'SP2B' in value:
-                value = value.split(" ")
-                processed_pathlist.append(path)
-                processed_secondslist.append(seconds)
+        try:
+            with open(path) as fpath:
+                lines = fpath.readlines()
+            for value in lines:
+                if 'SP2B' in value:
+                    value = value.split(" ")
+                    processed_pathlist.append(path)
+                    processed_secondslist.append(seconds)
+        except:
+            print("File " + path + " not found.")
+            print("Skipping...")
 
     for path, seconds in zip(processed_pathlist, processed_secondslist):
         final_visibility_vals = []
@@ -112,11 +124,17 @@ def summary(path_to_GARUDATA, cycle):
             filename = filename[0]
             filename = filename.split("_")
             source = filename[1]
-            freq = filename[2][4:]
+            
+            matching = [s for s in filename if "GMRT" in s]
+            freq = matching[0][4:]
+            
             file_last_val = filename[-2]+"_"+filename[-1]
 
             obsno = dirlist[-4]
-            cycleno = dirlist[-5]
+
+            cyclenumlist = [s for s in dirlist if "CYCLE" in s]
+
+            cycleno = cyclenumlist[0] #dirlist[-5]
             date = dirlist[-3].split("_")[1]
             proposal_id = dirlist[-3].split("_")[0]
 
@@ -132,6 +150,7 @@ def summary(path_to_GARUDATA, cycle):
 
             #Insert into database
             last_entry = dict.get("SP2B")
+
             if last_entry is not None:
                 collection = mydb[cycleno]
                 collection.insert_one(document)
