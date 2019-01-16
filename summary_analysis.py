@@ -182,6 +182,32 @@ def plot_kde(df):
             manager.resize(*manager.window.maxsize())
             plt.show()
 
+def plot_histogram(df):
+    for frequency in FREQUENCIES:
+        df_temp = df.loc[df['Frequency'] == frequency]
+        df_temp = df_temp.loc[df['SP1_flag'] == 1]
+        for stage in STAGES:
+            plt.suptitle("Histogram plots for frequency: " + str(frequency) + " stage: " + stage)
+            ct=0
+            for i in ATTRIBUTES:
+                ct+=1
+                str3=stage+'_'+i
+                print((str3)+"    "+str(df_temp[str3].max()))
+                plt.subplots_adjust( hspace=0.5, wspace=0.5 )
+                plt.subplot(2, 2, ct)
+                plt.grid(axis='y',alpha=0.75)
+                plt.xlabel(i)
+                plt.ylabel('Frequency')
+                plt.title('Histogram: Stage='+stage+' Field:'+i)
+                n, bins, patches=plt.hist(x=df_temp[str3], bins=20, color='#0504aa',alpha=0.7, rwidth=0.85)
+                
+                #maxfreq=n.max()
+                
+            manager=plt.get_current_fig_manager()
+            #manager.resize(*manager.window.maxsize())
+            #plt.savefig('Hist/Histo_'+str(frequency)+'_'+stage+'_'+i)
+            plt.show()
+
 def plot_heat_map(df):
 
     sns.set(style="white")
