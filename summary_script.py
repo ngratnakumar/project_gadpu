@@ -11,7 +11,7 @@ mydb = myclient[dbname]
 
 def visibility_update(path_to_garudata, cycle):
 
-    if cycle == 15:
+    if cycle == '15':
         filename = path_to_garudata + "GARUDATA/" + "IMAGING" + cycle + "/CYCLE" + cycle + "/"
     else:
         filename = path_to_garudata[:-1]
@@ -118,17 +118,19 @@ def summary(path_to_GARUDATA, cycle):
             obsno = dirlist[-4]
             cycleno = dirlist[-5]
             date = dirlist[-3].split("_")[1]
+            proposal_id = dirlist[-3].split("_")[0]
 
             document = {}
             document['source'] = source
             document['frequency'] = int(freq)
             document['obs_no'] = obsno
+            document['proposal_id'] = proposal_id
             document['date'] = date
             document['summary'] = dict
             document['time'] = {'minutes': minutes, 'seconds':seconds}
             document['file_last_val'] = file_last_val
 
-            # Insert into database
+            #Insert into database
             last_entry = dict.get("SP2B")
             if last_entry is not None:
                 collection = mydb[cycleno]
