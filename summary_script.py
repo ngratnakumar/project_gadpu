@@ -20,7 +20,8 @@ def visibility_update(path_to_garudata, cycle):
     else:
         filename = path_to_garudata[:-1]
 
-    home = expanduser("~") + "/project_gadpu"
+    home = expanduser("~") + "/project_gadpu"   # If project_gadpu is in home
+    #home = expanduser("~") + "/NCRA/project_gadpu"  # If project_gadpu is in NCRA
 
     timefile_name = home + "/integration_time/cyc" + cycle + "_integration_time_resolution"
     with open(timefile_name) as timefile:
@@ -124,10 +125,13 @@ def summary(path_to_GARUDATA, cycle):
             filename = filename[0]
             filename = filename.split("_")
             source = filename[1]
-            
+
             matching = [s for s in filename if "GMRT" in s]
-            freq = matching[0][4:]
-            
+            try:
+                freq = matching[0][4:]
+            except:
+                continue
+
             file_last_val = filename[-2]+"_"+filename[-1]
 
             obsno = dirlist[-4]
