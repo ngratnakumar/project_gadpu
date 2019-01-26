@@ -141,20 +141,20 @@ def plot_histogram(df):
 def plot_heat_map(df):
 
     sns.set(style="white")
-    df1 = df.loc[df["Frequency"] == "325"]
-    df2 = df.loc[df["Frequency"] == "610"]
+    df1 = df.loc[df["Frequency"] == 325]
+    df2 = df.loc[df["Frequency"] == 610]
 
     for stage in STAGES:
         stage_visibilities = stage + '_visibilities'
         stage_flux = stage + '_flux'
-        stage_clean = stage + '_clean'
+        stage_clean = stage + '_clean_components'
         stage_rms = stage + '_rms'
         df1_temp = df1[[stage_visibilities,stage_flux,stage_clean,stage_rms]]
         df2_temp = df2[[stage_visibilities,stage_flux,stage_clean,stage_rms]]
 
         #compute correlation matrix
-        corr1 = df1_temp.corr()
-        corr2 = df2_temp.corr()
+        corr1 = df1_temp.corr(method = "spearman")
+        corr2 = df2_temp.corr(method = "spearman")
 
         # Generate a mask for the upper triangle
         mask = np.zeros_like(corr1, dtype=np.bool)
@@ -194,7 +194,7 @@ def plot_3d_scatter(df):
 
     print("func called")
     for frequency in FREQUENCIES:
-        df_temp = df.loc[df['Frequency'] == str(frequency)]
+        df_temp = df.loc[df['Frequency'] == frequency]
         for stage in STAGES:
 
             fig = plt.figure()
@@ -204,7 +204,7 @@ def plot_3d_scatter(df):
 
             stage_visibilities = stage + '_visibilities'
             stage_flux = stage + '_flux'
-            stage_clean = stage + '_clean'
+            stage_clean = stage + '_clean_components'
             stage_rms = stage + '_rms'
 
             x = df_temp[stage_visibilities]
@@ -263,7 +263,7 @@ def splot(df):
 
     # Improve the legend
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[4:], labels[4:], title="freq",\
+    ax.legend(handles, labels, title="freq",\
         handletextpad=0, columnspacing=1,\
         loc="lower right", ncol=3, frameon=True)
 
@@ -287,8 +287,9 @@ def plot_scatter(df):
                 plt.subplot(2, 3, i)
                 plt.title(ylabel + ' v/s ' + xlabel)
                 plt.scatter(data_x, data_y, s=1 )
-            manager = plt.get_current_fig_manager()
-            manager.resize(*manager.window.maxsize())
+            if matplotlib.get_backend() == "TkAgg":
+                manager = plt.get_current_fig_manager()
+                manager.resize(*manager.window.maxsize())
             plt.show()
 
 def print_stats(df):
