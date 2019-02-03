@@ -20,8 +20,7 @@ def visibility_update(path_to_garudata, cycle):
     else:
         filename = path_to_garudata[:-1]
 
-    home = expanduser("~") + "/project_gadpu"   # If project_gadpu is in home
-    #home = expanduser("~") + "/NCRA/project_gadpu"  # If project_gadpu is in NCRA
+    home = expanduser("~") + "/NCRA/project_gadpu"
 
     timefile_name = home + "/integration_time/cyc" + cycle + "_integration_time_resolution"
     with open(timefile_name) as timefile:
