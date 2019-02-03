@@ -236,7 +236,7 @@ def plot_strip(df):
         for stage in STAGES:
             query_string = stage + "_" + attribute
             new_df[query_string] = df[query_string]
-        new_df["freq"] = df["Frequency"]
+        new_df["freq"] = new_df.loc[new_df["freq"].isin(FREQUENCIES)]
         splot(new_df)
 
 
@@ -293,7 +293,7 @@ def plot_scatter(df):
             plt.show()
 
 def print_stats(df):
-    for frequency in FREQUENCIES:
+    for frequency in set(df['Frequency']):
         print( "Number of data points for frequency", frequency, ":", df.loc[df['Frequency'] == frequency].shape[0] )
 
 def main():
