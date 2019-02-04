@@ -6,6 +6,7 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+import matplotlib.mlab as mlab
 from mpl_toolkits.mplot3d import axes3d, Axes3D
 from itertools import combinations
 
@@ -89,7 +90,8 @@ def clip_df( df, args_list ):
     return df
 
 
-def plot_histogram(df):
+def plot_histogram(df,p_type):
+
     for frequency in FREQUENCIES:
         df_temp = df.loc[df['Frequency'] == frequency]
         df_temp = df_temp.loc[df['SP1_flag'] == 1]
@@ -104,22 +106,44 @@ def plot_histogram(df):
         # for i in newarr:
         #     print(i)
         plt.grid(axis='y',alpha=0.75)
-        plt.xlabel('SP2B vs MC1 vis.')
+        plt.xlabel('SP2B vis/ MC1 vis.')
         plt.ylabel('Frequency')
         plt.title("Histogram plots for frequency: " + str(frequency))
-        n, bins, patches=plt.hist(x=ratio_vis, bins=100, color='#0504aa',alpha=0.7, rwidth=0.85)
+        if p_type=='normalised':
+            n, bins, patches=plt.hist(x=ratio_vis, bins=30, weights=np.zeros_like(ratio_vis) + 1. / ratio_vis.size, color='#0504aa',alpha=0.7, rwidth=0.65)
+        elif p_type=='cumulative':
+            n, bins, patches=plt.hist(x=ratio_vis, bins=30, cumulative=1, color='#0504aa',alpha=0.7, rwidth=0.65)
+        else:
+            n, bins, patches=plt.hist(x=ratio_vis, bins=30, color='#0504aa',alpha=0.7, rwidth=0.65)
+        
+        #y = mlab.normpdf(bins, np.mean(ratio_vis), np.std(ratio_vis))
+        string1='file_'+str(frequency)
+        if matplotlib.get_backend() == "TkAgg":
+            manager = plt.get_current_fig_manager()
+            manager.resize(*manager.window.maxsize())
+        else if matplotlib.get_backend() == 'QT':
+            manager = plt.get_current_fig_manager()
+            manager.window.showMaximized()
         plt.show()
 
 
 def main():
+    plot_name=''
     try:
         df = get_data_frame()
 
     except:
         print("summary.pkl not found. Creating new...")
         create_dataframe_from_db()
-        df = get_data_frame()
-    plot_histogram(df)
+        
+    if len(sys.argv)==2:
+        plot_name = sys.argv[1]
+    else: 
+        print("Usage: python3 analysis_hist.py [type]", "\nwhere plot_type is one of {cumulative, normalised}")
+        exit(1)
+    df = get_data_frame()
+    
+    plot_histogram(df,plot_name)
 
 
 if __name__ == "__main__":

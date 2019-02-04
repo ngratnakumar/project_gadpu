@@ -116,6 +116,9 @@ def plot_kde(df):
             if matplotlib.get_backend() == 'TkAgg':
                 manager = plt.get_current_fig_manager()
                 manager.resize(*manager.window.maxsize())
+            else if matplotlib.get_backend() == 'QT':
+                manager = plt.get_current_fig_manager()
+                manager.window.showMaximized()
             plt.show()
 
 def plot_histogram(df):
@@ -136,6 +139,12 @@ def plot_histogram(df):
                 plt.ylabel('Frequency')
                 plt.title('Histogram: Stage='+stage+' Field:'+i)
                 n, bins, patches=plt.hist(x=df_temp[str3], bins=20, color='#0504aa',alpha=0.7, rwidth=0.85)
+            if matplotlib.get_backend() == 'TkAgg':
+                manager = plt.get_current_fig_manager()
+                manager.resize(*manager.window.maxsize())
+            else if matplotlib.get_backend() == 'QT':
+                manager = plt.get_current_fig_manager()
+                manager.window.showMaximized()
             plt.show()
 
 def plot_heat_map(df):
@@ -188,6 +197,9 @@ def plot_heat_map(df):
         if matplotlib.get_backend() == 'TkAgg':
             manager = plt.get_current_fig_manager()
             manager.resize(*manager.window.maxsize())
+        else if matplotlib.get_backend() == 'QT':
+            manager = plt.get_current_fig_manager()
+            manager.window.showMaximized()
         plt.show()
 
 def plot_3d_scatter(df):
@@ -270,6 +282,9 @@ def splot(df):
     if matplotlib.get_backend() == 'TkAgg':
         manager = plt.get_current_fig_manager()
         manager.resize(*manager.window.maxsize())
+    else if matplotlib.get_backend() == 'QT':
+        manager = plt.get_current_fig_manager()
+        manager.window.showMaximized()
     plt.show()
 
 def plot_scatter(df):
@@ -290,6 +305,9 @@ def plot_scatter(df):
             if matplotlib.get_backend() == "TkAgg":
                 manager = plt.get_current_fig_manager()
                 manager.resize(*manager.window.maxsize())
+            else if matplotlib.get_backend() == 'QT':
+                manager = plt.get_current_fig_manager()
+                manager.window.showMaximized()
             plt.show()
 
 def print_stats(df):
