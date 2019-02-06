@@ -73,7 +73,7 @@ def visibility_update(path_to_garudata, cycle):
                 eachline = eachline.split(" ")
                 eachline = eachline[eachline.index("visibilities,") - 1]
                 eachline = int(eachline)
-                eachline = eachline * seconds
+                eachline = (eachline * seconds) / 378 # divide by 28c2 for the average time
                 final_visibility_vals.append(eachline)
         visibilities[path] = final_visibility_vals
 
@@ -131,7 +131,7 @@ def summary(path_to_GARUDATA, cycle):
                 flux = float(line[line.index("Jy") - 1])
                 clean_components = int(line[line.index("CLEAN") - 1])
                 rms = float(line[line.index("mJy/beam") - 1])
-                dict[keyname] = {"visibilities" : visibility, "flux" : flux, "clean_components" : clean_components, "rms" : rms}
+                dict[keyname] = {"on_source_time" : visibility, "flux" : flux, "clean_components" : clean_components, "rms" : rms}
 
         if lines:
             document = {}
