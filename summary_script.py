@@ -3,6 +3,10 @@ import re
 import sys
 from os.path import expanduser
 import pymongo
+import pandas as pd
+import numpy as np
+from datetime import datetime
+from dateutil.parser import parse
 
 dbname = "summary_db"
 
@@ -20,7 +24,8 @@ def visibility_update(path_to_garudata, cycle):
     else:
         filename = path_to_garudata[:-1]
 
-    home = expanduser("~") + "/NCRA/project_gadpu"
+    #home = expanduser("~") + "/project_gadpu"   # If project_gadpu is in home
+    home = expanduser("~") + "/NCRA/project_gadpu"  # If project_gadpu is in NCRA
 
     timefile_name = home + "/integration_time/cyc" + cycle + "_integration_time_resolution"
     with open(timefile_name) as timefile:
@@ -74,6 +79,18 @@ def visibility_update(path_to_garudata, cycle):
 
     return visibilities, processed_pathlist
 
+def get_data_frame():
+    df = pd.read_pickle('pickles/summary_dn.pkl')
+    print(df.head())
+    return df
+
+def get_day_night(filename, df):
+    # CHANGE THIS
+    re = filename[3:]
+    dn = df[df['summary_path'] == re]['dn']
+    if dn.shape[0] == 0:
+        return 'e'
+    return dn.to_string()[-1]
 
 def summary(path_to_GARUDATA, cycle):
     """Function to parse the required data from summary
@@ -82,9 +99,9 @@ def summary(path_to_GARUDATA, cycle):
     cycle number, date.
     """
     count = 0
-
+    duplicates = 0
     vis_directory, file_path_list = visibility_update(path_to_GARUDATA, cycle)
-
+    df = get_data_frame()
     for file_path in file_path_list:
         current_visibility = vis_directory[file_path]
         with open(file_path) as file:
@@ -117,9 +134,12 @@ def summary(path_to_GARUDATA, cycle):
                 dict[keyname] = {"visibilities" : visibility, "flux" : flux, "clean_components" : clean_components, "rms" : rms}
 
         if lines:
+            document = {}
             filename = file_path.split("/")
             dirlist = filename
             filename = filename[-1]
+            document['file_name'] = filename
+            document['dn'] = get_day_night(file_path, df)
             filename = filename.split(".")
             filename = filename[0]
             filename = filename.split("_")
@@ -138,10 +158,23 @@ def summary(path_to_GARUDATA, cycle):
             cyclenumlist = [s for s in dirlist if "CYCLE" in s]
 
             cycleno = cyclenumlist[0] #dirlist[-5]
-            date = dirlist[-3].split("_")[1]
+            date = dirlist[-3].split("_")[-1]
+            """
+            try:
+                parse(date)
+            except:
+                date = dirlist[-3].split("_")[-2]
+            """
+            try:
+                datetime.strptime( date, '%d%b%y' )
+            except:
+                try:
+                    datetime.strptime( date, '%d%b%Y' )
+                except:
+                    date = dirlist[-3].split("_")[-2]
+
             proposal_id = dirlist[-3].split("_")[0]
 
-            document = {}
             document['source'] = source
             document['frequency'] = int(freq)
             document['obs_no'] = obsno
@@ -153,13 +186,30 @@ def summary(path_to_GARUDATA, cycle):
 
             #Insert into database
             last_entry = dict.get("SP2B")
-
             if last_entry is not None:
                 collection = mydb[cycleno]
+                old_docs = collection.find( {'source':source, 'proposal_id':proposal_id} )
+                for old_doc in old_docs:
+                    duplicates += 1
+                    print(old_doc['date'])
+                    print(old_doc['file_name'])
+                    date_old = parse(old_doc['date'])
+                    date_new = parse(document['date'])
+                    if date_old > date_new:
+                        document = old_doc
+                    collection.delete_one({'_id': old_doc['_id']})
+                    count -= 1
+
                 collection.insert_one(document)
                 count += 1
-
+    print ("Number of duplicate summary files (not added to db) :", duplicates)
     return count
+
+def temp():
+    df = pd.read_pickle('../summary_path_list.pkl')
+    print(df.shape)
+    df['dn'] = np.random.choice(['d', 'n'], size=df.shape[0])
+    df.to_pickle('summary_dn.pkl')
 
 def main():
     if len(sys.argv) < 3:
@@ -167,6 +217,7 @@ def main():
         exit(1)
     path_to_GARUDATA = sys.argv[1]
     cycle = sys.argv[2]
+    #temp()
     count = summary(path_to_GARUDATA, cycle)
     print("Inserted", count, "documents into summary_db")
 

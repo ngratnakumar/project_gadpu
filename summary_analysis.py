@@ -8,6 +8,8 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import axes3d, Axes3D
 from itertools import combinations
+import dn_hist
+import scatter
 
 DB_NAME = "summary_db"
 
@@ -38,7 +40,16 @@ ATTRIBUTES = ['visibilities',
 
 FREQUENCIES = [325, 610]
 CMAPS = ['Blues', 'Purples', 'Oranges', 'Greens', 'Reds']
-CLIP_LIMITS = [325, 'MC1', 'visibilities', 50000, 325, 'MC1', 'flux', 6]
+CLIP_LIMITS = [325, 'MC1', 'visibilities', 800000,
+                325, 'MC1', 'rms', 10,
+                325, 'SP2B', 'rms', 5,
+                325, 'MC1', 'flux', 8,
+                325, 'MC1', 'clean_components', 20000,
+                610, 'MC1', 'visibilities', 3000000,
+                610, 'MC1', 'clean_components', 5000,
+                610, 'MC1', 'rms', 5,
+                610, 'MC1', 'flux', 2,
+                610, 'SP2B', 'rms', 1.2]
 
 def create_dataframe_from_db():
     print("Creating dataframe...")
@@ -51,6 +62,7 @@ def create_dataframe_from_db():
             dict = {}
             dict['Frequency'] = document["frequency"]
             dict['Cycle'] = int(col_name[5:])
+            dict['DN'] = document['dn'].lower()
             dict['SP1_flag'] = 1
             for stage in STAGES:
                 for attribute in ATTRIBUTES:
@@ -67,6 +79,7 @@ def create_dataframe_from_db():
 
 def get_data_frame():
     df = pd.read_pickle('summary.pkl')
+    print(df.shape)
     return df
 
 def clip_df( df, args_list ):
@@ -97,6 +110,12 @@ def select_plot( df, plot_name ):
         plot_heat_map(df)
     elif plot_name == 'strip_plot':
         plot_strip(df)
+    elif plot_name == 'dn_hist':
+        plot_day_night_hist(df)
+    elif plot_name == 'binned_scatter':
+        plot_binned_scatter(df)
+    elif plot_name == 'dn_scatter':
+        plot_day_night_scatter(df)
 
 def plot_kde(df):
     for c, frequency in enumerate(FREQUENCIES):
@@ -226,7 +245,7 @@ def plot_3d_scatter(df):
 
             xlabel = stage + "visibilities"
             ylabel = stage + "rms"
-            zlabel = stage + "clean"
+            zlabel = stage + "clean_components"
 
             ax.set_xlabel(xlabel)
             ax.set_ylabel(ylabel)
@@ -287,6 +306,53 @@ def splot(df):
         manager.window.showMaximized()
     plt.show()
 
+def plot_day_night_hist(df):
+    for freq in FREQUENCIES:
+        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq))
+        sp2b_day = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['SP2B_visibilities']
+        sp2b_night = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['SP2B_visibilities']
+        print(sp2b_day.shape)
+        print(sp2b_night.shape)
+        mc1_day = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['MC1_visibilities']
+        mc1_night = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['MC1_visibilities']
+        ratio_day = 1 - (sp2b_day / mc1_day)
+        ratio_night = 1 - (sp2b_night / mc1_night)
+        plt.xlabel("Fraction Rejected")
+        plt.ylabel("Frequency")
+        dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night")
+
+def maximize_window():
+    if matplotlib.get_backend() == 'TkAgg':
+        manager = plt.get_current_fig_manager()
+        manager.resize(*manager.window.maxsize())
+
+def plot_binned_scatter(df):
+    #plt.ylim(top=)
+    #plt.xlim(right=)
+    for freq in FREQUENCIES:
+        sp2b_rms = df[df['Frequency'] == freq]['SP2B_rms']
+        sp2b_vis = df[df['Frequency'] == freq]['SP2B_visibilities']
+        mc1_rms = df[df['Frequency'] == freq]['MC1_rms']
+        mc1_vis = df[df['Frequency'] == freq]['MC1_visibilities']
+        plt.title("MC1 RMS v/s Visibilities for frequency " + str(freq))
+        plt.xlim(right=1000000)
+        plt.ylim(top=15)
+        plt.xlabel("Visibilities")
+        plt.ylabel("RMS")
+        scatter.scatter( mc1_vis, mc1_rms, s=2 )
+        scatter.plot_binned_medians( mc1_vis, mc1_rms, numbins=300 )
+        maximize_window()
+        plt.show()
+        plt.title("SP2B RMS v/s Visibilities for frequency " + str(freq))
+        plt.xlim(right=1000000)
+        plt.ylim(top=8)
+        plt.xlabel("Visibilities")
+        plt.ylabel("RMS")
+        scatter.scatter( sp2b_vis, sp2b_rms, s=2 )
+        scatter.plot_binned_medians( sp2b_vis, sp2b_rms, numbins=300 )
+        maximize_window()
+        plt.show()
+
 def plot_scatter(df):
     df = df[df["SP1_flag"] == 1]
     for frequency in FREQUENCIES:
@@ -310,13 +376,27 @@ def plot_scatter(df):
                 manager.window.showMaximized()
             plt.show()
 
+def plot_day_night_scatter(df):
+    for freq in FREQUENCIES:
+        plt.title("RMS v/s Visibilities for frequency " + str(freq))
+        day_rms = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['SP2B_rms']
+        day_vis = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['SP2B_visibilities']
+        night_rms = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['SP2B_rms']
+        night_vis = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['SP2B_visibilities']
+        plt.xlabel("Visibilities")
+        plt.ylabel("RMS")
+        scatter.scatter( day_vis, day_rms, c='Red', label="Day", alpha=0.5, s=5 )
+        scatter.scatter( night_vis, night_rms, c='Blue', label="Night", alpha=0.5, s=5 )
+        plt.legend(loc="upper right")
+        plt.show()
+
 def print_stats(df):
     for frequency in set(df['Frequency']):
         print( "Number of data points for frequency", frequency, ":", df.loc[df['Frequency'] == frequency].shape[0] )
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 summary_analysis.py <plot_type> [create]", "\nwhere plot_type is one of { scatter, kde, histogram, heat_map, 3d_scatter, strip_plot }")
+        print("Usage: python3 summary_analysis.py <plot_type> [create]", "\nwhere plot_type is one of { scatter, kde, histogram, heat_map, 3d_scatter, strip_plot, dn_hist, binned_scatter, dn_scatter }")
         exit(1)
 
     if len(sys.argv) == 3:
@@ -328,7 +408,8 @@ def main():
         print("summary.pkl not found. Creating new...")
         create_dataframe_from_db()
         df = get_data_frame()
-
+    print_stats(df)
+    print(list(df))
     #df = clip_df(df, CLIP_LIMITS)
     print_stats(df)
     plot_name = sys.argv[1]
