@@ -135,7 +135,7 @@ def plot_kde(df):
             if matplotlib.get_backend() == 'TkAgg':
                 manager = plt.get_current_fig_manager()
                 manager.resize(*manager.window.maxsize())
-            else if matplotlib.get_backend() == 'QT':
+            elif matplotlib.get_backend() == 'QT':
                 manager = plt.get_current_fig_manager()
                 manager.window.showMaximized()
             plt.show()
@@ -161,7 +161,7 @@ def plot_histogram(df):
             if matplotlib.get_backend() == 'TkAgg':
                 manager = plt.get_current_fig_manager()
                 manager.resize(*manager.window.maxsize())
-            else if matplotlib.get_backend() == 'QT':
+            elif matplotlib.get_backend() == 'QT':
                 manager = plt.get_current_fig_manager()
                 manager.window.showMaximized()
             plt.show()
@@ -216,7 +216,7 @@ def plot_heat_map(df):
         if matplotlib.get_backend() == 'TkAgg':
             manager = plt.get_current_fig_manager()
             manager.resize(*manager.window.maxsize())
-        else if matplotlib.get_backend() == 'QT':
+        elif matplotlib.get_backend() == 'QT':
             manager = plt.get_current_fig_manager()
             manager.window.showMaximized()
         plt.show()
@@ -301,25 +301,38 @@ def splot(df):
     if matplotlib.get_backend() == 'TkAgg':
         manager = plt.get_current_fig_manager()
         manager.resize(*manager.window.maxsize())
-    else if matplotlib.get_backend() == 'QT':
+    elif matplotlib.get_backend() == 'QT':
         manager = plt.get_current_fig_manager()
         manager.window.showMaximized()
     plt.show()
 
 def plot_day_night_hist(df):
     for freq in FREQUENCIES:
-        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq))
-        sp2b_day = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['SP2B_visibilities']
-        sp2b_night = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['SP2B_visibilities']
-        print(sp2b_day.shape)
-        print(sp2b_night.shape)
-        mc1_day = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['MC1_visibilities']
-        mc1_night = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['MC1_visibilities']
-        ratio_day = 1 - (sp2b_day / mc1_day)
-        ratio_night = 1 - (sp2b_night / mc1_night)
+        # For old cycles i.e. 15-18
+        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq) + "(Cycles 15-18)")
+        sp2b_day_old = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['SP2B_visibilities']
+        sp2b_night_old = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['SP2B_visibilities']
+        mc1_day_old = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['MC1_visibilities']
+        mc1_night_old = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['MC1_visibilities']
+        ratio_day = 1 - (sp2b_day_old / mc1_day_old)
+        ratio_night = 1 - (sp2b_night_old / mc1_night_old)
         plt.xlabel("Fraction Rejected")
         plt.ylabel("Frequency")
         dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night")
+        dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night", cumulative=True)
+
+        # For new cycles i.e. 20 onwards
+        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq) + "(Cycles 20-25)")
+        sp2b_day_new = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['SP2B_visibilities']
+        sp2b_night_new = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['SP2B_visibilities']
+        mc1_day_new = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['MC1_visibilities']
+        mc1_night_new = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['MC1_visibilities']
+        ratio_day = 1 - (sp2b_day_new / mc1_day_new)
+        ratio_night = 1 - (sp2b_night_new / mc1_night_new)
+        plt.xlabel("Fraction Rejected")
+        plt.ylabel("Frequency")
+        dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night")
+        dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night", cumulative=True)
 
 def maximize_window():
     if matplotlib.get_backend() == 'TkAgg':
@@ -371,7 +384,7 @@ def plot_scatter(df):
             if matplotlib.get_backend() == "TkAgg":
                 manager = plt.get_current_fig_manager()
                 manager.resize(*manager.window.maxsize())
-            else if matplotlib.get_backend() == 'QT':
+            elif matplotlib.get_backend() == 'QT':
                 manager = plt.get_current_fig_manager()
                 manager.window.showMaximized()
             plt.show()
