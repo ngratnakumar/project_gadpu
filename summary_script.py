@@ -7,6 +7,14 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from dateutil.parser import parse
+import urllib.request, json
+import pprint
+import subprocess
+import itertools
+
+#TODO: Now we have cyc 24, 25 file structure in similar format
+#need to change scripts accordingly.. 
+
 
 dbname = "summary_db"
 
@@ -78,6 +86,46 @@ def visibility_update(path_to_garudata, cycle):
         visibilities[path] = final_visibility_vals
 
     return visibilities, processed_pathlist
+
+def add_Bandwidth(path_to_garudata, cycle):
+
+    #FIXME: Now should work for these two
+    if cycle == (24 or 25):
+        print("No obsnum for 24 and 25")
+        exit(0)
+    else:
+        path_to_garudata += '/GARUDATA/IMAGING' + str(cycle) + '/CYCLE' + str(cycle) + "/"
+
+        os.chdir(path_to_garudata)
+        str1 = 'ls'
+        out = subprocess.check_output(str1, shell=True)
+        out = out.decode('utf-8').strip()
+        out = out.split("\n")
+        print(out)
+
+        for obsnum in out:
+            if obsnum == 'MIXCYCLE':
+                continue
+            else:
+                urlval = str('http://192.168.118.48:5000/obsnum?obsnum=' + obsnum)
+                #print(urlval)
+                with urllib.request.urlopen(urlval) as url:
+                    data = json.loads(url.read().decode())
+                #print(data['bandwidth'])
+                #pp = pprint.PrettyPrinter()
+                #skip the obs if BW is empty
+                if data['bandwidth'] == '':
+                    bandwidth = None
+                    #continue
+                else:
+                    bandwidth = data['bandwidth']
+
+                cycleno = 'CYCLE' + str(cycle)
+                collection = mydb[cycleno]
+                #print(collection)
+                obsnum = str(obsnum)
+
+                collection.update({"obs_no":obsnum}, {"$set":{"bandwidth":bandwidth}}, multi=True)
 
 def get_data_frame():
     df = pd.read_pickle('pickles/summary_dn.pkl')
@@ -158,6 +206,8 @@ def summary(path_to_GARUDATA, cycle):
             cyclenumlist = [s for s in dirlist if "CYCLE" in s]
 
             cycleno = cyclenumlist[0] #dirlist[-5]
+
+            #FIXME:date is incorrect after cycle 18
             date = dirlist[-3].split("_")[-1]
             """
             try:
@@ -173,6 +223,7 @@ def summary(path_to_GARUDATA, cycle):
                 except:
                     date = dirlist[-3].split("_")[-2]
 
+            #FIXME:proposal id is incorrect after cycle 18
             proposal_id = dirlist[-3].split("_")[0]
 
             document['source'] = source
@@ -220,6 +271,7 @@ def main():
     #temp()
     count = summary(path_to_GARUDATA, cycle)
     print("Inserted", count, "documents into summary_db")
+    #add_Bandwidth(path_to_GARUDATA, cycle)
 
 if __name__ == "__main__":
     main()
