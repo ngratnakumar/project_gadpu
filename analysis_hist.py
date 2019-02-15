@@ -31,7 +31,7 @@ STAGES = ['MC1',
           'SP2B',
         ]
 
-ATTRIBUTES = ['visibilities',
+ATTRIBUTES = ['on_source_time',
               'flux',
               'clean_components',
               'rms',
@@ -39,7 +39,7 @@ ATTRIBUTES = ['visibilities',
 
 FREQUENCIES = [325, 610]
 CMAPS = ['Blues', 'Purples', 'Oranges', 'Greens', 'Reds']
-CLIP_LIMITS = [325, 'MC1', 'visibilities', 50000, 325, 'MC1', 'flux', 6]
+CLIP_LIMITS = [325, 'MC1', 'on_source_time', 50000, 325, 'MC1', 'flux', 6]
 
 
 def create_dataframe_from_db():
@@ -98,15 +98,15 @@ def plot_histogram(df,p_type):
         #print((str3)+"    "+str(df_temp[str3].max()))
         print(df_temp)
 
-        #for i,j in zip(df_temp['MC1_visibilities'],df_temp['SP2B_visibilities']):
-            # mc1_vis = df_temp['MC1_visibilities'][i]
-            # sp2b_vis = df_temp['SP2B_visibilities'][i]
-        ratio_vis = 1-(df_temp['SP2B_visibilities']/df_temp['MC1_visibilities'])
+        #for i,j in zip(df_temp['MC1_on_source_time'],df_temp['SP2B_on_source_time']):
+            # mc1_vis = df_temp['MC1_on_source_time'][i]
+            # sp2b_vis = df_temp['SP2B_on_source_time'][i]
+        ratio_vis = 1-(df_temp['SP2B_on_source_time']/df_temp['MC1_on_source_time'])
 
         # for i in newarr:
         #     print(i)
         plt.grid(axis='y',alpha=0.75)
-        plt.xlabel('SP2B vis/ MC1 vis.')
+        plt.xlabel('Fraction rejected')
         plt.ylabel('Frequency')
         plt.title("Histogram plots for frequency: " + str(frequency))
         if p_type=='normalised':
@@ -115,15 +115,17 @@ def plot_histogram(df,p_type):
             n, bins, patches=plt.hist(x=ratio_vis, bins=30, cumulative=1, color='#0504aa',alpha=0.7, rwidth=0.65)
         else:
             n, bins, patches=plt.hist(x=ratio_vis, bins=30, color='#0504aa',alpha=0.7, rwidth=0.65)
-        
+
         #y = mlab.normpdf(bins, np.mean(ratio_vis), np.std(ratio_vis))
         string1='file_'+str(frequency)
         if matplotlib.get_backend() == "TkAgg":
             manager = plt.get_current_fig_manager()
             manager.resize(*manager.window.maxsize())
-        else if matplotlib.get_backend() == 'QT':
+        elif matplotlib.get_backend() == 'QT':
             manager = plt.get_current_fig_manager()
             manager.window.showMaximized()
+        file_name='../plots/'+p_type+'_'+str(frequency)+'.png'
+        plt.savefig(file_name,dpi=300)
         plt.show()
 
 
@@ -135,17 +137,16 @@ def main():
     except:
         print("summary.pkl not found. Creating new...")
         create_dataframe_from_db()
-        
+
     if len(sys.argv)==2:
         plot_name = sys.argv[1]
-    else: 
+    else:
         print("Usage: python3 analysis_hist.py [type]", "\nwhere plot_type is one of {cumulative, normalised}")
         exit(1)
     df = get_data_frame()
-    
+
     plot_histogram(df,plot_name)
 
 
 if __name__ == "__main__":
-    main()   
-
+    main()
