@@ -1,27 +1,38 @@
-"""median of visibilities across cycles for SP2B
-Y = value of median
-X = Cycle number"""
+"""median of on_source_time across 
+cycles for SP2B"""
+
+#Y = value of median
+#X = Cycle number
+
+"""use data_y3 or data_y4 for rej/acc 
+plots respectively"""
+
 import matplotlib.pyplot as plt
 from summary_analysis import *
 
 df = get_data_frame()
 
-def cycleplot(arg):
-    cycle = df['Cycle']
-    cycle = cycle.astype(int)
+#print(df[df['Cycle']==18.0])
+"""df2 = df[df['Cycle']==18.0]
+df3 = (df2[df['Frequency']==325.0])
+print(df3['SP2B_on_source_time'].median())"""
 
-    vis = df['SP2B_visibilities']
+def cycleplot(arg):
+    #cycle = df['Cycle']
+    #cycle = cycle.astype(int)
+
+    vis = df['SP2B_on_source_time']
     #vis = df['SP2B_rms']
     #vis = df['SP2B_flux']
     #vis = df['SP2B_clean_components']
     #vis = df['MC1_clean_components']
     #vis = df['MC1_flux']
     #vis = df['MC1_rms']
-    #vis = df['MC1_visibilities']
+    #vis = df['MC1_on_source_time']
 
-    cycleslist = [15.0,16.0,17.0,18.0,20.0,22.0,23,24,25]
+    cycleslist = [15.0,16.0,17.0,18.0,19.0,20.0,22.0,23.0,24.0,25.0]
 
-    clist = [15,16,17,18,20,22,23,24,25]
+    clist = [15,16,17,18,19,20,22,23,24,25]
 
     SP2B_vis = []
     MC1_vis = []
@@ -29,22 +40,23 @@ def cycleplot(arg):
     accepted_val_list = []
 
     for cycle in (cycleslist):
-        val = df.loc[df['Cycle']==cycle]
+        val = df[df['Cycle']==cycle]
 
         df2 = val[val['Frequency']==arg]
 
-        val1 = df2['SP2B_visibilities'].median()
+        val1 = df2['SP2B_on_source_time'].median()
+        #print(cycle, val1)
         SP2B_vis.append(val1)
-        val2 = df2['MC1_visibilities'].median()
+        val2 = df2['MC1_on_source_time'].median()
         MC1_vis.append(val2)
 
-        vis_accepted = df2['SP2B_visibilities'] / df2['MC1_visibilities']
-        vis_rejected = 1 - (df2['SP2B_visibilities'] / df2['MC1_visibilities'])
+        vis_accepted = df2['SP2B_on_source_time'] / df2['MC1_on_source_time']
+        vis_rejected = 1 - (df2['SP2B_on_source_time'] / df2['MC1_on_source_time'])
 
-        rejected_med = vis_rejected.median()
         accepted_med = vis_accepted.median()
-        rejection_val_list.append(rejected_med)
+        rejected_med = vis_rejected.median()
         accepted_val_list.append(accepted_med)
+        rejection_val_list.append(rejected_med)
 
     data_x = clist
     data_y1 = SP2B_vis
@@ -52,23 +64,18 @@ def cycleplot(arg):
     data_y3 = rejection_val_list
     data_y4 = accepted_val_list
 
-    """scatter"""
-
-    #plt.scatter(data_x, data_y1, s=50, color='red')
-    #plt.scatter(data_x, data_y2, s=50, color='blue')
-    #plt.scatter(data_x, data_y3, s=50, color='blue')
-    #plt.scatter(data_x, data_y4, s=50, color='red')
-
-
     plt.xlabel('Cycle_Number')
-    plt.ylabel('vis_accepted for ' + str(int(arg)))
+    #plt.ylabel('SP2B on_source_time ' + str(int(arg)))
+#    plt.ylabel('SP2B rejected ' + str(int(arg)))
+    plt.ylabel('SP2B accepted ' + str(int(arg)))
 
-    #plt.plot(data_x, data_y1, '-o')
+#    plt.plot(data_x, data_y1, '-o')
     #plt.plot(data_x, data_y2, '-o')
-    plt.plot(data_x, data_y3, '-o')
-
-    #plt.plot(data_x, data_y4, '-o')
-    plt.savefig('SP2B_visibilities-' + str(int(arg)), dpi = 400)
+#    plt.plot(data_x, data_y3, '-o')
+    
+    plt.plot(data_x, data_y4, '-o')
+    
+    plt.savefig('SP2B_on_source_time-accepted' + str(int(arg)), dpi = 400)
     plt.show()
 
 def main():

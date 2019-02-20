@@ -5,7 +5,7 @@ import pprint
 import shutil
 import glob
 
-home = os.expanduser('~')
+home = os.path.expanduser('~')
 
 #Add your own path to GARUDATA
 path_to_garudata = home + '/Music/ncra-summaryfiles/NCRADATA/cyc15-25_summ/'
@@ -14,11 +14,45 @@ cycle = 25
 path_to_garudata += 'GARUDATA/IMAGING' + str(cycle) + '/CYCLE' + str(cycle) + "/"
 
 out = glob.glob(path_to_garudata+'/*')
-#os.chdir(path_to_garudata)
-"""str1 = 'ls'
-out = subprocess.check_output(str1, shell=True)
-out = out.decode('utf-8').strip()
-out = out.split("\n")"""
+
+
+#print(obslist)
+
+#for each file get its 3level up dire => obsnum and put this in res file
+
+timefile = open('/home/ashwin/NCRA/project_gadpu/integration_time/cyc25_integration_time_resolution')
+lines = timefile.readlines()
+#print(lines)
+flist = []
+
+f = open('newfile2.txt', 'a')
+
+for eachline in lines:
+    fname = eachline.split('/')[-1]
+    
+    fname = fname.split(':')[0]
+    fname = fname.split('.')[0]
+    fname += '.summary'
+
+    str1 = 'locate ' + fname
+    try:
+        out = subprocess.check_output(str1, shell=True)
+        out = out.decode('utf-8').strip()
+        out = out.split("\n")
+
+        name = out[0]
+        name = name.split('/')[10]
+        #print(name)
+
+        line = name + eachline[27:]
+        f.write(line)
+    except Exception as ex:
+        print(ex)
+
+
+#print(name)
+
+"""
 
 for each in out:
     elist = each.split('/')[-1]
@@ -37,4 +71,4 @@ for each in out:
         if not os.path.exists(obspath):
             os.makedirs(obspath)
 
-        shutil.move(each, obspath)
+        shutil.move(each, obspath)"""

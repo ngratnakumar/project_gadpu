@@ -24,11 +24,11 @@ mydb = myclient[dbname]
 
 def visibility_update(path_to_garudata, cycle):
 
-    if cycle == '15':
+    if cycle == '15' or cycle == '24' or cycle=='25':
         filename = path_to_garudata + "GARUDATA/" + "IMAGING" + cycle + "/CYCLE" + cycle + "/"
-    elif cycle == '21':
-        print("Cycle 21 is has incomplete time resolution values. Exiting now.")
-        exit(1)
+    #elif cycle == '21':
+    #    print("Cycle 21 is has incomplete time resolution values. Exiting now.")
+    #    exit(1)
     else:
         filename = path_to_garudata[:-1]
 
@@ -90,42 +90,43 @@ def visibility_update(path_to_garudata, cycle):
 def add_Bandwidth(path_to_garudata, cycle):
 
     #FIXME: Now should work for these two
-    if cycle == (24 or 25):
-        print("No obsnum for 24 and 25")
-        exit(0)
-    else:
-        path_to_garudata += '/GARUDATA/IMAGING' + str(cycle) + '/CYCLE' + str(cycle) + "/"
+    #if cycle == (24 or 25):
+    #    print("No obsnum for 24 and 25")
+    #    exit(0)
+    #else:
+    path_to_garudata += '/GARUDATA/IMAGING' + str(cycle) + '/CYCLE' + str(cycle) + "/"
 
-        os.chdir(path_to_garudata)
-        str1 = 'ls'
-        out = subprocess.check_output(str1, shell=True)
-        out = out.decode('utf-8').strip()
-        out = out.split("\n")
-        print(out)
+    os.chdir(path_to_garudata)
+    str1 = 'ls'
+    out = subprocess.check_output(str1, shell=True)
+    out = out.decode('utf-8').strip()
+    out = out.split("\n")
+    #print(out)
 
-        for obsnum in out:
-            if obsnum == 'MIXCYCLE':
-                continue
+    for obsnum in out:
+        if obsnum == 'MIXCYCLE':
+            bandwidth = None
+        else:
+            urlval = str('http://192.168.118.48:5000/obsnum?obsnum=' + obsnum)
+            #print(urlval)
+            with urllib.request.urlopen(urlval) as url:
+                data = json.loads(url.read().decode())
+            #print(data)#['bandwidth'])
+            pp = pprint.PrettyPrinter()
+            #pp.pprint(data)
+            #skip the obs if BW is empty
+            if data['bandwidth'] == None:
+                bandwidth = None
+                #continue
             else:
-                urlval = str('http://192.168.118.48:5000/obsnum?obsnum=' + obsnum)
-                #print(urlval)
-                with urllib.request.urlopen(urlval) as url:
-                    data = json.loads(url.read().decode())
-                #print(data['bandwidth'])
-                #pp = pprint.PrettyPrinter()
-                #skip the obs if BW is empty
-                if data['bandwidth'] == '':
-                    bandwidth = None
-                    #continue
-                else:
-                    bandwidth = data['bandwidth']
+                bandwidth = data['bandwidth']
 
-                cycleno = 'CYCLE' + str(cycle)
-                collection = mydb[cycleno]
-                #print(collection)
-                obsnum = str(obsnum)
+            cycleno = 'CYCLE' + str(cycle)
+            collection = mydb[cycleno]
+            #print(collection)
+            obsnum = str(obsnum)
 
-                collection.update({"obs_no":obsnum}, {"$set":{"bandwidth":bandwidth}}, multi=True)
+        collection.update({"obs_no":obsnum}, {"$set":{"bandwidth":bandwidth}}, multi=True)
 
 def get_data_frame():
     df = pd.read_pickle('pickles/summary_dn.pkl')
@@ -257,7 +258,7 @@ def summary(path_to_GARUDATA, cycle):
     return count
 
 def temp():
-    df = pd.read_pickle('../summary_path_list.pkl')
+    df = pd.read_pickle('summary_path_list.pkl')
     print(df.shape)
     df['dn'] = np.random.choice(['d', 'n'], size=df.shape[0])
     df.to_pickle('summary_dn.pkl')
@@ -271,7 +272,7 @@ def main():
     #temp()
     count = summary(path_to_GARUDATA, cycle)
     print("Inserted", count, "documents into summary_db")
-    #add_Bandwidth(path_to_GARUDATA, cycle)
+    add_Bandwidth(path_to_GARUDATA, cycle)
 
 if __name__ == "__main__":
     main()
