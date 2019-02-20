@@ -32,7 +32,7 @@ STAGES = ['MC1',
           'SP2B',
         ]
 
-ATTRIBUTES = ['visibilities',
+ATTRIBUTES = ['on_source_time',
               'flux',
               'clean_components',
               'rms',
@@ -40,12 +40,12 @@ ATTRIBUTES = ['visibilities',
 
 FREQUENCIES = [325, 610]
 CMAPS = ['Blues', 'Purples', 'Oranges', 'Greens', 'Reds']
-CLIP_LIMITS = [325, 'MC1', 'visibilities', 800000,
+CLIP_LIMITS = [325, 'MC1', 'on_source_time', 800000,
                 325, 'MC1', 'rms', 10,
                 325, 'SP2B', 'rms', 5,
                 325, 'MC1', 'flux', 8,
                 325, 'MC1', 'clean_components', 20000,
-                610, 'MC1', 'visibilities', 3000000,
+                610, 'MC1', 'on_source_time', 3000000,
                 610, 'MC1', 'clean_components', 5000,
                 610, 'MC1', 'rms', 5,
                 610, 'MC1', 'flux', 2,
@@ -173,12 +173,12 @@ def plot_heat_map(df):
     df2 = df.loc[df["Frequency"] == 610]
 
     for stage in STAGES:
-        stage_visibilities = stage + '_visibilities'
+        stage_on_source_time = stage + '_on_source_time'
         stage_flux = stage + '_flux'
         stage_clean = stage + '_clean_components'
         stage_rms = stage + '_rms'
-        df1_temp = df1[[stage_visibilities,stage_flux,stage_clean,stage_rms]]
-        df2_temp = df2[[stage_visibilities,stage_flux,stage_clean,stage_rms]]
+        df1_temp = df1[[stage_on_source_time,stage_flux,stage_clean,stage_rms]]
+        df2_temp = df2[[stage_on_source_time,stage_flux,stage_clean,stage_rms]]
 
         #compute correlation matrix
         corr1 = df1_temp.corr(method = "spearman")
@@ -233,17 +233,17 @@ def plot_3d_scatter(df):
             title = "4D plot for Frequency: " + str(frequency) + " Stage: " + stage
             fig.suptitle(title)
 
-            stage_visibilities = stage + '_visibilities'
+            stage_on_source_time = stage + '_on_source_time'
             stage_flux = stage + '_flux'
             stage_clean = stage + '_clean_components'
             stage_rms = stage + '_rms'
 
-            x = df_temp[stage_visibilities]
+            x = df_temp[stage_on_source_time]
             y = df_temp[stage_rms]
             z = df_temp[stage_clean]
             c = df_temp[stage_flux]
 
-            xlabel = stage + "visibilities"
+            xlabel = stage + "on_source_time"
             ylabel = stage + "rms"
             zlabel = stage + "clean_components"
 
@@ -309,29 +309,35 @@ def splot(df):
 def plot_day_night_hist(df):
     for freq in FREQUENCIES:
         # For old cycles i.e. 15-18
-        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq) + "(Cycles 15-18)")
-        sp2b_day_old = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['SP2B_visibilities']
-        sp2b_night_old = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['SP2B_visibilities']
-        mc1_day_old = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['MC1_visibilities']
-        mc1_night_old = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['MC1_visibilities']
+        sp2b_day_old = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['SP2B_on_source_time']
+        sp2b_night_old = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['SP2B_on_source_time']
+        mc1_day_old = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['MC1_on_source_time']
+        mc1_night_old = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] < 19) ]['MC1_on_source_time']
         ratio_day = 1 - (sp2b_day_old / mc1_day_old)
         ratio_night = 1 - (sp2b_night_old / mc1_night_old)
+        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq) + "(Cycles 15-18)")
         plt.xlabel("Fraction Rejected")
-        plt.ylabel("Frequency")
+        plt.ylabel("Percentage")
         dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night")
+        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq) + "(Cycles 15-18)")
+        plt.xlabel("Fraction Rejected")
+        plt.ylabel("Cumulative Percentage")
         dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night", cumulative=True)
 
         # For new cycles i.e. 20 onwards
-        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq) + "(Cycles 20-25)")
-        sp2b_day_new = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['SP2B_visibilities']
-        sp2b_night_new = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['SP2B_visibilities']
-        mc1_day_new = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['MC1_visibilities']
-        mc1_night_new = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['MC1_visibilities']
+        sp2b_day_new = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['SP2B_on_source_time']
+        sp2b_night_new = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['SP2B_on_source_time']
+        mc1_day_new = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['MC1_on_source_time']
+        mc1_night_new = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) & (df['Cycle'] > 19) ]['MC1_on_source_time']
         ratio_day = 1 - (sp2b_day_new / mc1_day_new)
         ratio_night = 1 - (sp2b_night_new / mc1_night_new)
+        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq) + "(Cycles 20-25)")
         plt.xlabel("Fraction Rejected")
-        plt.ylabel("Frequency")
+        plt.ylabel("Percentage")
         dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night")
+        plt.title("Fraction Rejected for Day/Night for frequency " + str(freq) + "(Cycles 20-25)")
+        plt.xlabel("Fraction Rejected")
+        plt.ylabel("Cumulative Percentage")
         dn_hist.plot_overlapped_histogram(ratio_day, "Day", ratio_night, "Night", cumulative=True)
 
 def maximize_window():
@@ -343,26 +349,26 @@ def plot_binned_scatter(df):
     #plt.ylim(top=)
     #plt.xlim(right=)
     for freq in FREQUENCIES:
-        sp2b_rms = df[df['Frequency'] == freq]['SP2B_rms']
-        sp2b_vis = df[df['Frequency'] == freq]['SP2B_visibilities']
-        mc1_rms = df[df['Frequency'] == freq]['MC1_rms']
-        mc1_vis = df[df['Frequency'] == freq]['MC1_visibilities']
-        plt.title("MC1 RMS v/s Visibilities for frequency " + str(freq))
-        plt.xlim(right=1000000)
-        plt.ylim(top=15)
-        plt.xlabel("Visibilities")
+        sp2b_rms = df[df['Frequency'] == freq]['SP2B_rms'].values
+        sp2b_vis = df[df['Frequency'] == freq]['SP2B_on_source_time'].values
+        mc1_rms = df[df['Frequency'] == freq]['MC1_rms'].values
+        mc1_vis = df[df['Frequency'] == freq]['MC1_on_source_time'].values
+        plt.title("MC1 RMS v/s On source time for frequency " + str(freq))
+        #plt.xlim(right=1000000)
+        #plt.ylim(top=15)
+        plt.xlabel("On Source Time (seconds)")
         plt.ylabel("RMS")
         scatter.scatter( mc1_vis, mc1_rms, s=2 )
-        scatter.plot_binned_medians( mc1_vis, mc1_rms, numbins=300 )
+        scatter.plot_width_binned_medians( mc1_vis, mc1_rms, numbins=100 )
         maximize_window()
         plt.show()
-        plt.title("SP2B RMS v/s Visibilities for frequency " + str(freq))
-        plt.xlim(right=1000000)
-        plt.ylim(top=8)
-        plt.xlabel("Visibilities")
+        plt.title("SP2B RMS v/s On source time for frequency " + str(freq))
+        #plt.xlim(right=1000000)
+        #plt.ylim(top=8)
+        plt.xlabel("On Source Time (seconds)")
         plt.ylabel("RMS")
         scatter.scatter( sp2b_vis, sp2b_rms, s=2 )
-        scatter.plot_binned_medians( sp2b_vis, sp2b_rms, numbins=300 )
+        scatter.plot_width_binned_medians( sp2b_vis, sp2b_rms, numbins=100 )
         maximize_window()
         plt.show()
 
@@ -391,12 +397,12 @@ def plot_scatter(df):
 
 def plot_day_night_scatter(df):
     for freq in FREQUENCIES:
-        plt.title("RMS v/s Visibilities for frequency " + str(freq))
+        plt.title("RMS v/s On source time for frequency " + str(freq))
         day_rms = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['SP2B_rms']
-        day_vis = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['SP2B_visibilities']
+        day_vis = df[ (df['DN'] == 'd') & (df['Frequency'] == freq) ]['SP2B_on_source_time']
         night_rms = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['SP2B_rms']
-        night_vis = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['SP2B_visibilities']
-        plt.xlabel("Visibilities")
+        night_vis = df[ (df['DN'] == 'n') & (df['Frequency'] == freq) ]['SP2B_on_source_time']
+        plt.xlabel("On Source Time")
         plt.ylabel("RMS")
         scatter.scatter( day_vis, day_rms, c='Red', label="Day", alpha=0.5, s=5 )
         scatter.scatter( night_vis, night_rms, c='Blue', label="Night", alpha=0.5, s=5 )
